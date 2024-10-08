@@ -7,7 +7,7 @@ It's a naive implementation, use with caution. Special cases are not handled.
 ## Usage
 
 ``` shell
-usage: check_with_thresholds_as_perfdata.py [-h] [-w WARNING] [-c CRITICAL] -C COMMAND
+usage: check_with_thresholds_as_perfdata.py [-h] [-w WARNING] [-c CRITICAL] -C "COMMAND"
 
 Opsview Plugin Wrapper Script
 
@@ -18,7 +18,7 @@ options:
   -c CRITICAL, --critical CRITICAL
                         Critical threshold
   -C COMMAND, --command COMMAND
-                        Command to execute
+                        Command to execute (double quotes required)
 
 ```
 

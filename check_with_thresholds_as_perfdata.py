@@ -27,7 +27,13 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Opsview Plugin Wrapper Script")
     parser.add_argument("-w", "--warning", type=str, help="Warning threshold")
     parser.add_argument("-c", "--critical", type=str, help="Critical threshold")
-    parser.add_argument("-C", "--command", help="Command to execute", type=str, required=True)
+    parser.add_argument(
+        "-C",
+        "--command",
+        help="Command to execute (double quotes required)",
+        type=str,
+        required=True,
+    )
 
     return parser.parse_args()
 
