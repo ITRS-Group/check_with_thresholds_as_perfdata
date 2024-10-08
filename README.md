@@ -7,13 +7,9 @@ It's a naive implementation, use with caution. Special cases are not handled.
 ## Usage
 
 ``` shell
-usage: check_with_thresholds_as_perfdata.py [-h] [-w WARNING] [-c CRITICAL]
-                                            ...
+usage: check_with_thresholds_as_perfdata.py [-h] [-w WARNING] [-c CRITICAL] -C COMMAND
 
 Opsview Plugin Wrapper Script
-
-positional arguments:
-  command               Command to execute
 
 options:
   -h, --help            show this help message and exit
@@ -21,6 +17,9 @@ options:
                         Warning threshold
   -c CRITICAL, --critical CRITICAL
                         Critical threshold
+  -C COMMAND, --command COMMAND
+                        Command to execute
+
 ```
 
 * Each threshold is optional, but at least one must be provided.
@@ -30,11 +29,12 @@ options:
 * Perfdata metrics will be sorted in the output.
 * The return code of the executed command will be passed through.
 * Exceptions will be caught and the return code will be 3 (UNKNOWN).
+* The COMMAND should be surrounded by double quotes.
 
 ## Example
 
 ``` shell
-$ ./check_with_thresholds_as_perfdata.py -w 80 -c 90 /bin/echo "OK - Everything is fine | metric=1;2;3;4"
+$ ./check_with_thresholds_as_perfdata.py -w 80 -c 90 -C "/bin/echo 'OK - Everything is fine | metric=1;2;3;4'"
 OK - Everything is fine | metric_critical=90;;;4 metric_warning=80;;;4 metric=1;2;3;4
 ```
 

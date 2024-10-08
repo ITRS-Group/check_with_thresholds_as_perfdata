@@ -21,27 +21,57 @@ from unittest.mock import patch, MagicMock
 from io import StringIO
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from check_with_thresholds_as_perfdata import main, append_thresholds_to_perfdata, parse_perfdata
+from check_with_thresholds_as_perfdata import (
+    main,
+    append_thresholds_to_perfdata,
+    parse_arguments,
+    parse_perfdata,
+)
 
 OK_OUTPUT = "OK - Disk space is sufficient | '/var'=55%;80;90;0;100"
 WARNING_OUTPUT = "WARNING - Disk space is NOT sufficient | '/var'=85%;80;90;0;100"
 CRITICAL_OUTPUT = "CRITICAL - Disk space is NOT sufficient | '/var'=95%;80;90;0;100"
 SINGLE_PART_CMD_LINE_ARGS = [
-    "/opt/opsview/monitoringscripts/plugins/check_nrpe",
-    "-H",
-    "192.168.1.1",
-    "-c",
-    "linux_stat",
-    "-a",
-    "-D -w 80 -c 90 -p /var -u %",
+    "-C",
+    (
+        "/opt/opsview/monitoringscripts/plugins/check_nrpe"
+        "-H"
+        "192.168.1.1"
+        "-c"
+        "linux_stat"
+        "-a"
+        "-D -w 80 -c 90 -p /var -u %"
+    ),
 ]
-DUAL_PART_CMD_LINE_ARGS = SINGLE_PART_CMD_LINE_ARGS[:-1] + ["-D -w 80 -c 90 -p /tmp -p /var -u %"]
-TRIPLE_PART_CMD_LINE_ARGS = SINGLE_PART_CMD_LINE_ARGS[:-1] + [
-    "-D -w 80 -c 90 -p /tmp -p /var -p / -u %"
+DUAL_PART_CMD_LINE_ARGS = [
+    "-C",
+    (
+        "/opt/opsview/monitoringscripts/plugins/check_nrpe"
+        "-H"
+        "192.168.1.1"
+        "-c"
+        "linux_stat"
+        "-a"
+        "-D -w 80 -c 90 -p /tmp -p /var -u %"
+    ),
+]
+
+TRIPLE_PART_CMD_LINE_ARGS = [
+    "-C",
+    (
+        "/opt/opsview/monitoringscripts/plugins/check_nrpe"
+        "-H"
+        "192.168.1.1"
+        "-c"
+        "linux_stat"
+        "-a"
+        "-D -w 80 -c 90 -p /tmp -p /var -p / -u %"
+    ),
 ]
 
 
 class TestOpsviewPluginWrapper(unittest.TestCase):
+
     def test_append_thresholds_to_perfdata(self):
         perfdata_entries = parse_perfdata("'/var'=55%;80;90;0;100")
         updated_perfdata = append_thresholds_to_perfdata(
@@ -90,9 +120,8 @@ class TestOpsviewPluginWrapper(unittest.TestCase):
                 "80",
                 "-c",
                 "90",
-                "/bin/foo",
-                "-H",
-                "localhost",
+                "-C",
+                "/bin/foo -H localhost",
             ]
             with patch.object(sys, "argv", test_args):
                 try:
@@ -128,7 +157,11 @@ class TestOpsviewPluginWrapper(unittest.TestCase):
                 except SystemExit as e:
                     self.assertEqual(e.code, 3)
 
-        expected_output = "Error: No performance data found\n"
+        expected_output = (
+            "Error: No performance data found. "
+            "Got the following output:\n"
+            "OK - Disk space is sufficient\n"
+        )
         self.assertEqual(expected_output, mock_stderr.getvalue())
 
     @patch("sys.stderr", new_callable=StringIO)

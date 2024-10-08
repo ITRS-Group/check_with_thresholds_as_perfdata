@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/opt/opsview/python3/bin/python
 #
 # Copyright 2024 ITRS Group Ltd.
 #
@@ -27,18 +27,20 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="Opsview Plugin Wrapper Script")
     parser.add_argument("-w", "--warning", type=str, help="Warning threshold")
     parser.add_argument("-c", "--critical", type=str, help="Critical threshold")
-    parser.add_argument("command", nargs=argparse.REMAINDER, help="Command to execute")
-    args = parser.parse_args()
-    if not args.command:
-        sys.stderr.write("Error: No command provided to execute\n")
-        sys.exit(3)
-    return args
+    parser.add_argument("-C", "--command", help="Command to execute", type=str, required=True)
+
+    return parser.parse_args()
 
 
 def execute_command(command):
     """Execute the command and return the result."""
+    if command.startswith('"') and command.endswith('"'):
+        command = command[1:-1]
+    elif command.startswith("'") and command.endswith("'"):
+        command = command[1:-1]
+
     try:
-        result = subprocess.run(shlex.split(command), capture_output=True, text=True, check=False)
+        result = subprocess.run(command, capture_output=True, text=True, check=False, shell=True)
     except FileNotFoundError:
         sys.stderr.write(f"Error: Command not found: {command}\n")
         sys.exit(127)
@@ -51,7 +53,8 @@ def execute_command(command):
 
 def process_command_output(result):
     """Process the command output and return stdout, stderr, and return code."""
-    if result.returncode > 3:
+    if result.returncode > 2:
+        print(result.stdout)
         sys.stderr.write(result.stderr)
         sys.exit(result.returncode)
     return result.stdout.strip(), result.stderr.strip(), result.returncode
@@ -154,13 +157,13 @@ def main():
         sys.stderr.write("Error: --warning and/or --critical must be provided\n")
         sys.exit(3)
 
-    command = " ".join(args.command).strip()
-    result = execute_command(command)
+    result = execute_command(args.command)
     stdout, stderr, return_code = process_command_output(result)
     output, perfdata = extract_perfdata(stdout)
 
     if not perfdata:
-        sys.stderr.write("Error: No performance data found\n")
+        sys.stderr.write("Error: No performance data found. Got the following output:\n")
+        sys.stderr.write(stdout + "\n")
         sys.exit(3)
 
     perfdata_entries = parse_perfdata(perfdata)
