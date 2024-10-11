@@ -107,7 +107,10 @@ class TestOpsviewPluginWrapper(unittest.TestCase):
     def test_command_not_found(self, mock_subprocess_run, _mock_stderr):
         mock_result = MagicMock()
         mock_result.stdout = ""
-        mock_result.stderr = "Error: Command not found: /bin/foo\n"
+        mock_result.stderr = (
+            "Error: Command not found: "
+            "/opt/opsview/monitoringscripts/plugins/check_non_existing_plugin\n"
+        )
         mock_result.returncode = 127
         mock_subprocess_run.return_value = mock_result
 
@@ -121,7 +124,7 @@ class TestOpsviewPluginWrapper(unittest.TestCase):
                 "-c",
                 "90",
                 "-C",
-                "/bin/foo -H localhost",
+                '"/opt/opsview/monitoringscripts/plugins/check_non_existing_plugin -H localhost"',
             ]
             with patch.object(sys, "argv", test_args):
                 try:
@@ -129,7 +132,10 @@ class TestOpsviewPluginWrapper(unittest.TestCase):
                 except SystemExit as e:
                     self.assertEqual(e.code, 127)
 
-        expected_output = "Error: Command not found: /bin/foo\n"
+        expected_output = (
+            "Error: Command not found: "
+            "/opt/opsview/monitoringscripts/plugins/check_non_existing_plugin\n"
+        )
         self.assertEqual(expected_output, mock_stderr.getvalue())
 
     @patch("sys.stderr", new_callable=StringIO)
@@ -557,6 +563,27 @@ class TestOpsviewPluginWrapper(unittest.TestCase):
         )
         self.maxDiff = None
         self.assertEqual(expected_output, mock_stdout.getvalue())
+
+    @patch("sys.stderr", new_callable=StringIO)
+    def test_invalid_path_of_command_results_in_error(self, mock_stderr):
+        mock_result = MagicMock()
+
+        with patch("sys.stdout", new_callable=lambda: sys.stdout) as _mock_stdout, patch(
+            "sys.stderr", new_callable=lambda: sys.stderr
+        ) as mock_stderr:
+            test_args = ["script_name", "-w", "80", "-c", "90", "-C", '"/bin/echo foo"']
+            with patch.object(sys, "argv", test_args):
+                try:
+                    main()
+                except SystemExit as e:
+                    self.assertEqual(e.code, 3)
+
+        expected_output = (
+            "Error: Command MUST start with a path in the "
+            "/opt/opsview/monitoringscripts directory\n"
+        )
+        self.maxDiff = None
+        self.assertEqual(expected_output, mock_stderr.getvalue())
 
 
 if __name__ == "__main__":

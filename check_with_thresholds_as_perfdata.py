@@ -155,6 +155,16 @@ def append_thresholds_to_perfdata(perfdata, parsed_perfdata, warning, critical):
     return " ".join(sorted(perfdata_strings))
 
 
+def exit_if_command_does_not_start_with_an_opsview_path(command):
+    """Validate that the command is a valid path to a plugin."""
+    command = command.strip("'\"")
+    if not command.startswith("/opt/opsview/monitoringscripts/"):
+        sys.stderr.write(
+            "Error: Command MUST start with a path in the /opt/opsview/monitoringscripts directory\n"
+        )
+        sys.exit(3)
+
+
 def main():
     """Run the plugin command and append warning and critical thresholds as perfdata."""
     args = parse_arguments()
@@ -162,6 +172,8 @@ def main():
     if not args.warning and not args.critical:
         sys.stderr.write("Error: --warning and/or --critical must be provided\n")
         sys.exit(3)
+
+    exit_if_command_does_not_start_with_an_opsview_path(args.command)
 
     result = execute_command(args.command)
     stdout, stderr, return_code = process_command_output(result)
