@@ -102,6 +102,30 @@ class TestOpsviewPluginWrapper(unittest.TestCase):
         )
         self.assertEqual(updated_perfdata, expected_perfdata)
 
+    def test_append_multiple_thresholds_to_perfdata_with_static_thresholds(self):
+        self.maxDiff = None
+        perfdata_entries = parse_perfdata("'/var'=55%;75;85;0;100 '/tmp'=55%;75;85;0;100")
+        updated_perfdata = append_thresholds_to_perfdata(
+            "'/var'=55%;75;85;0;100 '/tmp'=55%;75;85;0;100",
+            perfdata_entries,
+            warning="75",
+            critical="85",
+            static=["static_warning_threshold=80", "static_critical_threshold=90"],
+        )
+        expected_perfdata = (
+            "'/tmp'=55%;75;85;0;100 "
+            "'/tmp_critical_threshold'=85%;;;0;100 "
+            "'/tmp_static_critical_threshold'=90%;;;0;100 "
+            "'/tmp_static_warning_threshold'=80%;;;0;100 "
+            "'/tmp_warning_threshold'=75%;;;0;100 "
+            "'/var'=55%;75;85;0;100 "
+            "'/var_critical_threshold'=85%;;;0;100 "
+            "'/var_static_critical_threshold'=90%;;;0;100 "
+            "'/var_static_warning_threshold'=80%;;;0;100 "
+            "'/var_warning_threshold'=75%;;;0;100"
+        )
+        self.assertEqual(updated_perfdata, expected_perfdata)
+
     @patch("sys.stderr", new_callable=StringIO)
     @patch("subprocess.run")
     def test_command_not_found(self, mock_subprocess_run, _mock_stderr):

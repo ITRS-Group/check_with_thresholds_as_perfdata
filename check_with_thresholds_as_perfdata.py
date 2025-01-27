@@ -28,6 +28,13 @@ def parse_arguments():
     parser.add_argument("-w", "--warning", type=str, help="Warning threshold")
     parser.add_argument("-c", "--critical", type=str, help="Critical threshold")
     parser.add_argument(
+        "-s",
+        "--static",
+        type=str,
+        help="Static performance metric, e.g. 'label_postfix=value'",
+        action="append",
+    )
+    parser.add_argument(
         "-C",
         "--command",
         help="Command to execute (double quotes required)",
@@ -123,9 +130,9 @@ def parse_perfdata_entry(entry):
     return label, value, uom, warn, crit, min_val, max_val
 
 
-def append_thresholds_to_perfdata(perfdata, parsed_perfdata, warning, critical):
+def append_thresholds_to_perfdata(perfdata, parsed_perfdata, warning, critical, static=[]):
     """Append warning and critical thresholds to the performance data."""
-    if not warning and not critical:
+    if not warning and not critical and not static:
         return perfdata
 
     perfdata_strings = []
@@ -151,6 +158,14 @@ def append_thresholds_to_perfdata(perfdata, parsed_perfdata, warning, critical):
                 f"'{label}_critical_threshold'={critical}{uom};;{min_str}{max_str}".strip(";")
             )
             perfdata_strings.append(critical_string)
+
+        if static:
+            for s in static:
+                label_postfix, value = s.split("=")
+                static_string = f"'{label}_{label_postfix}'={value}{uom};;{min_str}{max_str}".strip(
+                    ";"
+                )
+                perfdata_strings.append(static_string)
 
     return " ".join(sorted(perfdata_strings))
 
@@ -187,7 +202,7 @@ def main():
     perfdata_entries = parse_perfdata(perfdata)
 
     updated_perfdata = append_thresholds_to_perfdata(
-        perfdata, perfdata_entries, args.warning, args.critical
+        perfdata, perfdata_entries, args.warning, args.critical, args.static
     )
 
     # Print the output with the updated performance data
