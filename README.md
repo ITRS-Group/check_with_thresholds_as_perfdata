@@ -7,19 +7,19 @@ It's a naive implementation, use with caution. Special cases are not handled.
 ## Usage
 
 ``` shell
-usage: check_with_thresholds_as_perfdata.py [-h] [-w WARNING] [-c CRITICAL] -C "COMMAND"
+usage: check_with_thresholds_as_perfdata.py [-h] [-w WARNING] [-c CRITICAL] [-s STATIC] -C COMMAND
 
 Opsview Plugin Wrapper Script
 
 options:
   -h, --help            show this help message and exit
-  -w WARNING, --warning WARNING
+  -w, --warning WARNING
                         Warning threshold
-  -c CRITICAL, --critical CRITICAL
+  -c, --critical CRITICAL
                         Critical threshold
-  -C COMMAND, --command COMMAND
+  -s, --static STATIC   Static performance metric, e.g. 'label_postfix=value'
+  -C, --command COMMAND
                         Command to execute (double quotes required)
-
 ```
 
 * Each threshold is optional, but at least one must be provided.
