@@ -194,12 +194,38 @@ class TestOpsviewPluginWrapper(unittest.TestCase):
         )
         self.assertEqual(expected_output, mock_stderr.getvalue())
 
+    @patch("sys.stdout", new_callable=StringIO)
+    @patch("subprocess.run")
+    def test_valid_only_static(self, mock_subprocess_run, mock_stdout):
+        mock_result = MagicMock()
+        mock_result.stdout = "OK | '/var'=55%;80;90;0;100"
+        mock_result.stderr = ""
+        mock_result.returncode = 0
+        mock_subprocess_run.return_value = mock_result
+
+        with patch("sys.stdout", new_callable=lambda: sys.stdout) as mock_stdout, patch(
+            "sys.stderr", new_callable=lambda: sys.stderr
+        ) as _mock_stderr:
+            test_args = [
+                "script_name",
+                "--static",
+                "foo=100",
+            ] + SINGLE_PART_CMD_LINE_ARGS
+            with patch.object(sys, "argv", test_args):
+                try:
+                    main()
+                except SystemExit as e:
+                    self.assertEqual(e.code, 0)
+
+        expected_output = "OK | '/var'=55%;80;90;0;100 '/var_foo'=100%;;;0;100\n"
+        self.assertEqual(expected_output, mock_stdout.getvalue())
+
     @patch("sys.stderr", new_callable=StringIO)
     @patch("subprocess.run")
-    def test_valid_no_warning_no_critical(self, mock_subprocess_run, mock_stdout):
+    def test_valid_no_warning_no_critical_no_static(self, mock_subprocess_run, mock_stdout):
         mock_result = MagicMock()
         mock_result.stdout = ""
-        mock_result.stderr = "Error: --warning and/or --critical must be provided"
+        mock_result.stderr = "Error: --static, --warning, or --critical must be provided"
         mock_result.returncode = 3
         mock_subprocess_run.return_value = mock_result
 
@@ -215,7 +241,7 @@ class TestOpsviewPluginWrapper(unittest.TestCase):
                 except SystemExit as e:
                     self.assertEqual(e.code, 3)
 
-        expected_output = "Error: --warning and/or --critical must be provided\n"
+        expected_output = "Error: --static, --warning, or --critical must be provided\n"
         self.assertEqual(expected_output, mock_stdout.getvalue())
 
     @patch("sys.stdout", new_callable=StringIO)

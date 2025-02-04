@@ -181,11 +181,11 @@ def exit_if_command_does_not_start_with_an_opsview_path(command):
 
 
 def main():
-    """Run the plugin command and append warning and critical thresholds as perfdata."""
+    """Run the plugin command and append warning and critical thresholds (and/or a static value) as perfdata."""
     args = parse_arguments()
 
-    if not args.warning and not args.critical:
-        sys.stderr.write("Error: --warning and/or --critical must be provided\n")
+    if not args.warning and not args.critical and not args.static:
+        sys.stderr.write("Error: --static, --warning, or --critical must be provided\n")
         sys.exit(3)
 
     exit_if_command_does_not_start_with_an_opsview_path(args.command)
